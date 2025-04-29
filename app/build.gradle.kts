@@ -41,8 +41,6 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-splashscreen:1.0.1")
-
     implementation ("androidx.work:work-runtime-ktx:2.7.1")
     implementation ("androidx.core:core-ktx:1.7.0")
     implementation ("androidx.compose.material3:material3:1.0.0")
