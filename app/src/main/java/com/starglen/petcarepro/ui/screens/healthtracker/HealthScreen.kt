@@ -29,17 +29,29 @@ import androidx.compose.ui.unit.sp
 import com.starglen.petcarepro.R
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.model.Medication
 import com.starglen.petcarepro.ui.screens.nutrition.ROUTE_HOME
 import com.starglen.petcarepro.ui.theme.maincolor
 import com.starglen.petcarepro.ui.theme.newwhite
 import java.text.SimpleDateFormat
 import java.util.*
+import com.model.Vaccine
+import com.model.VetVisit
+import com.navigation.ROUT_MEDICATION
+import com.viewmodel.HealthViewModel
+import com.viewmodel.MedicationViewModel
+import com.viewmodel.VaccinationViewModel
 
 @Composable fun AppBackground() = if (isSystemInDarkTheme()) Color(0xFF121212) else Color(0xFFFFFFFF)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HealthScreen(navController: NavController) {
+fun HealthScreen(
+    navController: NavController,
+    healthViewModel: HealthViewModel,
+    vaccinationViewModel: VaccinationViewModel,
+    medicationViewModel: MedicationViewModel
+) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
@@ -60,151 +72,189 @@ fun HealthScreen(navController: NavController) {
 
     var medName by remember { mutableStateOf(TextFieldValue()) }
     var medDose by remember { mutableStateOf(TextFieldValue()) }
+    var medSchedule by remember { mutableStateOf(TextFieldValue()) }
     var medStartDate by remember { mutableStateOf("") }
     var medNote by remember { mutableStateOf(TextFieldValue()) }
 
     var documentUploaded by remember { mutableStateOf(false) }
 
-   Column (modifier = Modifier.background(AppBackground())){
-       TopAppBar(
-           title = { Text(text = "Health Tracker") },
-           colors = TopAppBarDefaults.topAppBarColors(
-               containerColor = maincolor,
-               titleContentColor = newwhite,
-               navigationIconContentColor = newwhite
-           ),
-           navigationIcon = {
-               IconButton(onClick = {
-                   navController.navigate(ROUTE_HOME)
-               }) {
-                   Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-               }
-           }
-       )
+    Column(modifier = Modifier.background(AppBackground())) {
+        TopAppBar(
+            title = { Text(text = "Health Tracker") },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = maincolor,
+                titleContentColor = newwhite,
+                navigationIconContentColor = newwhite
+            ),
+            navigationIcon = {
+                IconButton(onClick = {
+                    navController.navigate(ROUTE_HOME)
+                }) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+            }
+        )
 
-       Column(
-           modifier = Modifier
-               .fillMaxSize()
-               .verticalScroll(scrollState)
-               .padding(16.dp)
-       ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-           Spacer(modifier = Modifier.height(16.dp))
+            // Vet Visit Card
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.vetvisit),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Vet Visit", fontSize = 18.sp)
+                    }
 
-           // Vet Visit Form
-           Card(modifier = Modifier.fillMaxWidth()) {
-               Column(Modifier.padding(16.dp)) {
-                   Row(verticalAlignment = Alignment.CenterVertically) {
-                       Image(
-                           painter = painterResource(id = R.drawable.vetvisit),
-                           contentDescription = null,
-                           modifier = Modifier.size(24.dp)
-                       )
-                       Spacer(modifier = Modifier.width(8.dp))
-                       Text("Vet Visit", fontSize = 18.sp)
-                   }
-                   Spacer(Modifier.height(4.dp))
-                   Text(if (vetDate.isNotBlank()) "Last Visit: $vetDate" else "No visits yet")
+                    Spacer(Modifier.height(4.dp))
+                    val vetVisits by healthViewModel.vetVisits.collectAsState()
+                    val latestVisit = vetVisits.lastOrNull()
 
-                   Row {
-                       TextButton(onClick = { showVisitForm = !showVisitForm }) {
-                           Text(if (showVisitForm) "Hide Visit Input" else "Add Visit")
-                       }
+                    Text(
+                        text = latestVisit?.let {
+                            "Last Visit: ${it.title} with ${it.vetName} on ${it.date}"
+                        } ?: "No visits yet"
+                    )
 
-                     Row (horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()){
-                         TextButton(onClick = { },) {
-                             Text("View Visit History")
-                         }
-                     }
-                   }
+                    Row {
+                        TextButton(onClick = { showVisitForm = !showVisitForm }) {
+                            Text(if (showVisitForm) "Hide Visit Input" else "Add Visit")
+                        }
 
-                   AnimatedVisibility(visible = showVisitForm, enter = expandVertically()) {
-                       Column {
-                           OutlinedTextField(value = vetTitle, onValueChange = { vetTitle = it }, label = { Text("Visit Title") }, modifier = Modifier.fillMaxWidth())
-                           OutlinedTextField(value = vetName, onValueChange = { vetName = it }, label = { Text("Vet Name") }, modifier = Modifier.fillMaxWidth())
-                           DateField("Visit Date", vetDate, context) { vetDate = it }
-                           OutlinedTextField(value = vetNote, onValueChange = { vetNote = it }, label = { Text("Visit Notes") }, modifier = Modifier.fillMaxWidth())
+                        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                            TextButton(onClick = {
+                                navController.navigate("vet_visit_history")
+                            }) {
+                                Text("View Visit History")
+                            }
+                        }
+                    }
 
-                           Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                               TextButton(onClick = { showVisitForm = false }) { Text("Cancel") }
-                               Spacer(modifier = Modifier.width(8.dp))
-                               Button(onClick = {
-                                   if (vetDate.isNotBlank()) {
-                                       // Save visit logic here
-                                       vetTitle = TextFieldValue()
-                                       vetName = TextFieldValue()
-                                       vetNote = TextFieldValue()
-                                       vetDate = ""
-                                       showVisitForm = false
-                                   }
-                               }) {
-                                   Text("Save Visit")
-                               }
-                           }
-                       }
-                   }
-               }
-           }
+                    AnimatedVisibility(visible = showVisitForm, enter = expandVertically()) {
+                        Column {
+                            OutlinedTextField(value = vetTitle, onValueChange = { vetTitle = it }, label = { Text("Visit Title") }, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(value = vetName, onValueChange = { vetName = it }, label = { Text("Vet Name") }, modifier = Modifier.fillMaxWidth())
+                            DateField("Visit Date", vetDate, context) { vetDate = it }
+                            OutlinedTextField(value = vetNote, onValueChange = { vetNote = it }, label = { Text("Visit Notes") }, modifier = Modifier.fillMaxWidth())
 
-           Spacer(modifier = Modifier.height(16.dp))
+                            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                                TextButton(onClick = { showVisitForm = false }) { Text("Cancel") }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(onClick = {
+                                    if (vetDate.isNotBlank()) {
+                                        val newVisit = VetVisit(
+                                            id = UUID.randomUUID().hashCode(),
+                                            title = vetTitle.text,
+                                            vetName = vetName.text,
+                                            date = vetDate,
+                                            note = vetNote.text
+                                        )
+                                        healthViewModel.addVisit(newVisit)
 
-           // Vaccination Form
-           Card(modifier = Modifier.fillMaxWidth()) {
-               Column(Modifier.padding(16.dp)) {
-                   Row(verticalAlignment = Alignment.CenterVertically) {
-                       Image(
-                           painter = painterResource(id = R.drawable.vaccine),
-                           contentDescription = null,
-                           modifier = Modifier.size(24.dp)
-                       )
-                       Spacer(modifier = Modifier.width(8.dp))
-                       Text("Vaccination", fontSize = 18.sp)
-                   }
-                   Spacer(Modifier.height(4.dp))
-                   Text(if (vaccineDate.isNotBlank()) "Last Vaccine: $vaccineDate" else "No records yet")
+                                        vetTitle = TextFieldValue()
+                                        vetName = TextFieldValue()
+                                        vetNote = TextFieldValue()
+                                        vetDate = ""
+                                        showVisitForm = false
+                                    }
+                                }) {
+                                    Text("Save Visit")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-                  Row {
-                      TextButton(onClick = { showVaccineForm = !showVaccineForm }) {
-                          Text(if (showVaccineForm) "Hide Vaccine Input" else "Add Vaccine")
-                      }
-                      Row (horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()){
-                          TextButton(onClick = { },) {
-                              Text("View Vaccine History")
-                          }
-                      }
-                  }
+            Spacer(modifier = Modifier.height(16.dp))
 
-                   AnimatedVisibility(visible = showVaccineForm, enter = expandVertically()) {
-                       Column {
-                           OutlinedTextField(value = vaccineName, onValueChange = { vaccineName = it }, label = { Text("Vaccine Name") }, modifier = Modifier.fillMaxWidth())
-                           OutlinedTextField(value = vaccineDisease, onValueChange = { vaccineDisease = it }, label = { Text("Disease") }, modifier = Modifier.fillMaxWidth())
-                           DateField("Date Given", vaccineDate, context) { vaccineDate = it }
-                           OutlinedTextField(value = vaccineManufacturer, onValueChange = { vaccineManufacturer = it }, label = { Text("Manufacturer") }, modifier = Modifier.fillMaxWidth())
-                           OutlinedTextField(value = vaccineNote, onValueChange = { vaccineNote = it }, label = { Text("Vaccine Notes") }, modifier = Modifier.fillMaxWidth())
+            // Vaccine Card
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.vaccine),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Vaccination", fontSize = 18.sp)
+                    }
 
-                           Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                               TextButton(onClick = { showVaccineForm = false }) { Text("Cancel") }
-                               Spacer(modifier = Modifier.width(8.dp))
-                               Button(onClick = {
-                                   if (vaccineDate.isNotBlank()) {
-                                       // Save vaccine logic here
-                                       vaccineName = TextFieldValue()
-                                       vaccineDisease = TextFieldValue()
-                                       vaccineManufacturer = TextFieldValue()
-                                       vaccineNote = TextFieldValue()
-                                       vaccineDate = ""
-                                       showVaccineForm = false
-                                   }
-                               }) {
-                                   Text("Save Vaccine")
-                               }
-                           }
-                       }
-                   }
-               }
-           }
+                    Spacer(Modifier.height(4.dp))
 
-           Spacer(modifier = Modifier.height(16.dp))
+                    val vaccines by vaccinationViewModel.vaccinations.collectAsState()
+                    val latestVaccine = vaccines.lastOrNull()
+                    Text(
+                        text = latestVaccine?.let {
+                            "Last Vaccine: ${it.vaccineName} on ${it.dateGiven}"
+                        } ?: "No vaccines yet"
+                    )
+
+                    Row {
+                        TextButton(onClick = { showVaccineForm = !showVaccineForm }) {
+                            Text(if (showVaccineForm) "Hide Vaccine Input" else "Add Vaccine")
+                        }
+
+                        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                            TextButton(onClick = {
+                                navController.navigate("vaccine")
+                            }) {
+                                Text("View Vaccine History")
+                            }
+                        }
+                    }
+
+                    AnimatedVisibility(visible = showVaccineForm, enter = expandVertically()) {
+                        Column {
+                            OutlinedTextField(value = vaccineName, onValueChange = { vaccineName = it }, label = { Text("Vaccine Name") }, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(value = vaccineDisease, onValueChange = { vaccineDisease = it }, label = { Text("Disease") }, modifier = Modifier.fillMaxWidth())
+                            DateField("Date Given", vaccineDate, context) { vaccineDate = it }
+                            OutlinedTextField(value = vaccineManufacturer, onValueChange = { vaccineManufacturer = it }, label = { Text("Manufacturer") }, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(value = vaccineNote, onValueChange = { vaccineNote = it }, label = { Text("Vaccine Notes") }, modifier = Modifier.fillMaxWidth())
+
+                            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                                TextButton(onClick = { showVaccineForm = false }) { Text("Cancel") }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(onClick = {
+                                    if (vaccineDate.isNotBlank()) {
+                                        val newVaccine = Vaccine(
+                                            id = UUID.randomUUID().hashCode(),
+                                            vaccineName = vaccineName.text,
+                                            disease = vaccineDisease.text,
+                                            dateGiven = vaccineDate,
+                                            manufacturer = vaccineManufacturer.text,
+                                            note = if (vaccineNote.text.isNotBlank()) vaccineNote.text else null
+                                        )
+                                        vaccinationViewModel.addVaccination(newVaccine)
+
+                                        vaccineName = TextFieldValue()
+                                        vaccineDisease = TextFieldValue()
+                                        vaccineManufacturer = TextFieldValue()
+                                        vaccineNote = TextFieldValue()
+                                        vaccineDate = ""
+                                        showVaccineForm = false
+                                    }
+                                }) {
+                                    Text("Save Vaccine")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
            // Medication Form
            Card(modifier = Modifier.fillMaxWidth()) {
@@ -219,14 +269,24 @@ fun HealthScreen(navController: NavController) {
                        Text("Medication", fontSize = 18.sp)
                    }
                    Spacer(Modifier.height(4.dp))
-                   Text(if (medStartDate.isNotBlank()) "Last Medication: $medStartDate" else "No medication records yet")
+                   val medications by medicationViewModel.medications.collectAsState()
+                   val latestMedication = medications.lastOrNull()
+
+                   Text(
+                       text = latestMedication?.let {
+                           "Last Medication: ${it.medicationName}, ${it.dosage} • ${it.startDate}"
+                       } ?: "No medications yet"
+                   )
+
 
                    Row {
                        TextButton(onClick = { showMedicationForm = !showMedicationForm }) {
                            Text(if (showMedicationForm) "Hide Medication Input" else "Add Medication")
                        }
                        Row (horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()){
-                           TextButton(onClick = { },) {
+                           TextButton(onClick = {
+                               navController.navigate("medication")
+                           },) {
                                Text("View Medication History")
                            }
                        }
@@ -234,19 +294,58 @@ fun HealthScreen(navController: NavController) {
 
                    AnimatedVisibility(visible = showMedicationForm, enter = expandVertically()) {
                        Column {
-                           OutlinedTextField(value = medName, onValueChange = { medName = it }, label = { Text("Medication Name") }, modifier = Modifier.fillMaxWidth())
-                           OutlinedTextField(value = medDose, onValueChange = { medDose = it }, label = { Text("Dose") }, modifier = Modifier.fillMaxWidth())
-                           DateField("Start Date", medStartDate, context) { medStartDate = it }
-                           OutlinedTextField(value = medNote, onValueChange = { medNote = it }, label = { Text("Medication Notes") }, modifier = Modifier.fillMaxWidth())
+                           OutlinedTextField(
+                               value = medName,
+                               onValueChange = { medName = it },
+                               label = { Text("Medication Name") },
+                               modifier = Modifier.fillMaxWidth()
+                           )
+
+                           OutlinedTextField(
+                               value = medDose,
+                               onValueChange = { medDose = it },
+                               label = { Text("Dose") },
+                               modifier = Modifier.fillMaxWidth()
+                           )
+
+                           OutlinedTextField(
+                               value = medSchedule,
+                               onValueChange = { medSchedule = it },
+                               label = { Text("Schedule (e.g., 2x daily)") },
+                               modifier = Modifier.fillMaxWidth()
+                           )
+
+                           DateField("Start Date", medStartDate, context) {
+                               medStartDate = it
+                           }
+
+                           OutlinedTextField(
+                               value = medNote,
+                               onValueChange = { medNote = it },
+                               label = { Text("Medication Notes") },
+                               modifier = Modifier.fillMaxWidth()
+                           )
+
 
                            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                                TextButton(onClick = { showMedicationForm = false }) { Text("Cancel") }
                                Spacer(modifier = Modifier.width(8.dp))
                                Button(onClick = {
                                    if (medStartDate.isNotBlank()) {
-                                       // Save medication logic here
+                                       val newMedication = Medication(
+                                           id = UUID.randomUUID().hashCode(),
+                                           medicationName= medName.text,
+                                           dosage = medDose.text,
+                                           schedule = medSchedule.text,
+                                           startDate = medStartDate,
+                                           notes = if (medNote.text.isNotBlank()) medNote.text else null
+                                       )
+                                       medicationViewModel.addMedication(newMedication)
+
+                                       // Reset the form
                                        medName = TextFieldValue()
                                        medDose = TextFieldValue()
+                                       medSchedule = TextFieldValue()
                                        medNote = TextFieldValue()
                                        medStartDate = ""
                                        showMedicationForm = false
@@ -254,6 +353,7 @@ fun HealthScreen(navController: NavController) {
                                }) {
                                    Text("Save Medication")
                                }
+
                            }
                        }
                    }
@@ -333,5 +433,6 @@ fun showDatePicker(context: Context, onDateSelected: (String) -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewHealthScreen() {
-    HealthScreen(rememberNavController())
+    HealthScreen(rememberNavController(), HealthViewModel(), VaccinationViewModel(),
+        MedicationViewModel())
 }
