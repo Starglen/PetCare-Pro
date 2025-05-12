@@ -8,18 +8,21 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- Optional: For scoped storage fallback in Android 10 -->
+    <!-- File and Media Access -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <!-- Camera -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
 
-    <!-- Google map-->
+
+    <!-- Map and Internet -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-
-
-
 
     <application
         android:allowBackup="true"
@@ -33,7 +36,6 @@
         android:requestLegacyExternalStorage="true"
         tools:targetApi="31">
 
-        <!-- MainActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -45,12 +47,10 @@
             </intent-filter>
         </activity>
 
-
-
+        <!-- Google Maps API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCffAJdmF3H_JNGLU2ok0VdblsEkH7dgm0"/>
-
+            android:value="AIzaSyCffAJdmF3H_JNGLU2ok0VdblsEkH7dgm0" />
 
     </application>
 

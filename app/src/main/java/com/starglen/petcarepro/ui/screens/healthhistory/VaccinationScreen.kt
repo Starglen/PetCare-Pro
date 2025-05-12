@@ -1,5 +1,6 @@
 package com.starglen.petcarepro.ui.screens.healthhistory
 
+import android.app.Application
 import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.model.Vaccine
-import com.starglen.petcarepro.ui.screens.nutrition.ROUTE_HOME
 import com.starglen.petcarepro.ui.theme.maincolor
 import com.viewmodel.VaccinationViewModel
 import java.util.*
@@ -34,7 +35,7 @@ fun VaccinationScreen(
     navController: NavController,
     vaccinationViewModel: VaccinationViewModel
 ) {
-    val vaccinations = vaccinationViewModel.vaccinations.collectAsState().value
+    val vaccinations by vaccinationViewModel.allVaccines.observeAsState(emptyList())
     var showEditForm by remember { mutableStateOf(false) }
     var selectedVaccine by remember { mutableStateOf<Vaccine?>(null) }
     var showAddForm by remember { mutableStateOf(false) }
@@ -52,7 +53,6 @@ fun VaccinationScreen(
                     }
                 }
             )
-
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddForm = true }, containerColor = maincolor) {
@@ -110,7 +110,7 @@ fun VaccinationScreen(
 
                                     Button(
                                         onClick = {
-                                            vaccinationViewModel.deleteVaccination(vaccine.id)
+                                            vaccine.id?.let { vaccinationViewModel.deleteVaccination(vaccine) }
                                         },
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFCDD2))
                                     ) {
@@ -124,17 +124,19 @@ fun VaccinationScreen(
             }
         }
 
+        // Edit Form
         if (showEditForm && selectedVaccine != null) {
             EditVaccineDialog(
                 vaccine = selectedVaccine!!,
                 onDismiss = { showEditForm = false },
                 onSave = { updatedVaccine ->
-                    vaccinationViewModel.editVaccination(updatedVaccine)
+                    vaccinationViewModel.updateVaccination(updatedVaccine)
                     showEditForm = false
                 }
             )
         }
 
+        // Add Form
         if (showAddForm) {
             AddVaccineDialog(
                 onDismiss = { showAddForm = false },
@@ -289,8 +291,6 @@ fun VaccineDialogLayout(
                                     calendar.get(Calendar.MONTH),
                                     calendar.get(Calendar.DAY_OF_MONTH)
                                 )
-                                // Customize the DatePickerDialog appearance
-                                datePickerDialog.window?.setBackgroundDrawableResource(android.R.color.white)
                                 datePickerDialog.show()
                             }
                         )
@@ -333,5 +333,10 @@ fun VaccineDialogLayout(
 @Preview(showBackground = true)
 @Composable
 fun VaccinationScreenPreview() {
-    VaccinationScreen(rememberNavController(), VaccinationViewModel())
+    // You can use a mock ViewModel for previews
+    val mockViewModel = VaccinationViewModel(LocalContext.current.applicationContext as Application)
+    VaccinationScreen(
+        navController = rememberNavController(),
+        vaccinationViewModel = mockViewModel
+    )
 }

@@ -70,6 +70,9 @@ dependencies {
     // Image Loading (Coil for Jetpack Compose)
     implementation ("io.coil-kt:coil-compose:2.4.0")
 
+    implementation("androidx.compose.foundation:foundation:1.5.0") // or newer
+    implementation ("com.google.accompanist:accompanist-pager:0.24.13-rc")
+
     //livedata
     implementation ("androidx.compose.runtime:runtime-livedata:1.6.4")
 
@@ -80,5 +83,16 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.maps.android:maps-compose:2.11.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+
+    //upload document
+    implementation("androidx.activity:activity-compose:1.8.0") // or latest
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+
+    // 🔧 ✅ CameraX dependencies (ADD THESE):
+        implementation("androidx.camera:camera-core:1.3.0")
+        implementation("androidx.camera:camera-camera2:1.3.0")
+        implementation("androidx.camera:camera-lifecycle:1.3.0")
+        implementation("androidx.camera:camera-view:1.3.0")
 
 }

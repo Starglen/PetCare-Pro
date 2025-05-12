@@ -1,32 +1,39 @@
 package com.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import com.repository.MedicationRepository
 import com.model.Medication
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class MedicationViewModel : ViewModel() {
+class MedicationViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Private MutableStateFlow to manage medications
-    private val _medications = MutableStateFlow<List<Medication>>(emptyList())
-    val medications: StateFlow<List<Medication>> = _medications
+    private val repository: MedicationRepository = MedicationRepository(application.applicationContext)
 
-    // Add a new medication
+    // Expose all medications as LiveData, converting Flow to LiveData
+    val allMedications: LiveData<List<Medication>> = repository.getAllMedications().asLiveData()
+
+    // Function to add a new medication
     fun addMedication(medication: Medication) {
-        // Add medication to the list
-        _medications.value = _medications.value + medication
-    }
-
-    // Edit an existing medication
-    fun editMedication(updatedMedication: Medication) {
-        _medications.value = _medications.value.map {
-            if (it.id == updatedMedication.id) updatedMedication else it
+        viewModelScope.launch {
+            repository.insertMedication(medication)
         }
     }
 
-    // Delete a medication
-    fun deleteMedication(id: Int) {
-        // Remove medication by matching the ID
-        _medications.value = _medications.value.filter { it.id != id }
+    // Function to update an existing medication
+    fun updateMedication(medication: Medication) {
+        viewModelScope.launch {
+            repository.updateMedication(medication)
+        }
+    }
+
+    // Function to delete a medication
+    fun deleteMedication(medication: Medication) {
+        viewModelScope.launch {
+            repository.deleteMedication(medication)
+        }
     }
 }

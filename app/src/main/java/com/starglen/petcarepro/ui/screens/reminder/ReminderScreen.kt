@@ -49,6 +49,8 @@ fun ReminderScreen(navController: NavController, initialReminders: List<Reminder
     var showNewReminderForm by remember { mutableStateOf(false) }
     var newReminder by remember { mutableStateOf(ReminderData()) }
 
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,13 +85,37 @@ fun ReminderScreen(navController: NavController, initialReminders: List<Reminder
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = {
+                                val activityList = mutableListOf<String>()
+                                val petType = newReminder.petType
+
+                                if (newReminder.feedChecked) activityList.add("Feed your $petType")
+                                if (newReminder.waterChecked) activityList.add("Give water to your $petType")
+                                if (newReminder.walkChecked) activityList.add("Take your $petType for a walk")
+
+                                val message = if (activityList.isNotEmpty()) {
+                                    activityList.joinToString(" and ")
+                                } else {
+                                    "It's time to care for your pet!"
+                                }
+
                                 reminders.add(newReminder)
                                 reminders = reminders.toMutableList()
+
+                                ReminderNotificationHelper.showNotification(
+                                    context = context,
+                                    title = "Reminder Saved",
+                                    message = message
+                                )
+
                                 newReminder = ReminderData()
                                 showNewReminderForm = false
                             },
                             modifier = Modifier.weight(1f)
-                        ) { Text("Save") }
+                        ) {
+                            Text("Save")
+                        }
+
+
 
                         OutlinedButton(
                             onClick = {
@@ -198,6 +224,11 @@ fun ReminderCard(
                             Icon(Icons.Default.Delete, contentDescription = "Delete")
                         }
                     }
+
+                    // Edit icon below delete icon
+                    IconButton(onClick = { isLabelEditing = !isLabelEditing }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
                 }
             }
 
@@ -227,6 +258,7 @@ fun ReminderCard(
         }
     }
 }
+
 
 @Composable
 fun ScheduleAlarmView(scheduledDate: String?, onDatePicked: (String?) -> Unit) {

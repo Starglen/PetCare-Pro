@@ -1,9 +1,11 @@
 package com.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-
+@Entity(tableName = "vaccines")
 data class Vaccine(
-    val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val vaccineName: String,
     val disease: String,
     val dateGiven: String,

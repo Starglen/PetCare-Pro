@@ -30,7 +30,7 @@ fun MapScreen(navController: NavController) {
     val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     val context = LocalContext.current
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
-    var nearbyHospitals by remember { mutableStateOf<List<LatLng>>(emptyList()) }
+    var nearbyVets by remember { mutableStateOf<List<LatLng>>(emptyList()) }
 
     // Request permission if not granted
     if (!permissionState.status.isGranted) {
@@ -43,8 +43,8 @@ fun MapScreen(navController: NavController) {
         if (permissionState.status.isGranted) {
             userLocation = getCurrentLocation(context)
             userLocation?.let {
-                // Fetch nearby hospitals once location is available
-                nearbyHospitals = getNearbyHospitals(context, it)
+                // Fetch nearby vet clinics once location is available
+                nearbyVets = getNearbyVets(context, it)
             }
         }
     }
@@ -66,11 +66,11 @@ fun MapScreen(navController: NavController) {
                     title = "You are here"
                 )
 
-                // Markers for nearby hospitals
-                nearbyHospitals.forEach { hospital ->
+                // Markers for nearby vet clinics
+                nearbyVets.forEach { vet ->
                     Marker(
-                        state = MarkerState(position = hospital),
-                        title = "Nearby Hospital"
+                        state = MarkerState(position = vet),
+                        title = "Nearby Vet Clinic"
                     )
                 }
             }
@@ -82,10 +82,6 @@ fun MapScreen(navController: NavController) {
         }
     }
 }
-
-
-
-
 
 @SuppressLint("MissingPermission")
 suspend fun getCurrentLocation(context: Context): LatLng? {
@@ -104,26 +100,24 @@ suspend fun getCurrentLocation(context: Context): LatLng? {
     }
 }
 
-
-
-// Fetch nearby hospitals
-suspend fun getNearbyHospitals(context: Context, location: LatLng): List<LatLng> {
+// Fetch nearby vet clinics
+suspend fun getNearbyVets(context: Context, location: LatLng): List<LatLng> {
     return withContext(Dispatchers.IO) {
         try {
             val url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" +
                     "?location=${location.latitude},${location.longitude}" +
-                    "&radius=5000&type=hospital&key=YOUR_API_KEY"
+                    "&radius=5000&type=veterinary_care&key=AIzaSyCffAJdmF3H_JNGLU2ok0VdblsEkH7dgm0"  // Your API Key
 
             val result = URL(url).readText()
             val json = JSONObject(result)
             val results = json.getJSONArray("results")
 
-            val hospitals = mutableListOf<LatLng>()
+            val vets = mutableListOf<LatLng>()
             for (i in 0 until results.length()) {
                 val loc = results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location")
-                hospitals.add(LatLng(loc.getDouble("lat"), loc.getDouble("lng")))
+                vets.add(LatLng(loc.getDouble("lat"), loc.getDouble("lng")))
             }
-            return@withContext hospitals
+            return@withContext vets
         } catch (e: Exception) {
             e.printStackTrace()
             return@withContext emptyList<LatLng>() // Return empty list on failure

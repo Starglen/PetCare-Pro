@@ -1,5 +1,6 @@
 package com.starglen.petcarepro.ui.screens.healthhistory
 
+import android.app.Application
 import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,10 +35,14 @@ fun MedicationScreen(
     navController: NavController,
     medicationViewModel: MedicationViewModel
 ) {
-    val medications = medicationViewModel.medications.collectAsState().value
+    // Observe medications from ViewModel
+    val medications by medicationViewModel.allMedications.observeAsState(initial = emptyList())
+
     var showEditForm by remember { mutableStateOf(false) }
     var selectedMedication by remember { mutableStateOf<Medication?>(null) }
     var showAddForm by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }  // State to show delete dialog
+    var medicationToDelete by remember { mutableStateOf<Medication?>(null) }  // State to hold medication to delete
 
     Scaffold(
         topBar = {
@@ -58,6 +64,7 @@ fun MedicationScreen(
             }
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -71,49 +78,17 @@ fun MedicationScreen(
             } else {
                 LazyColumn {
                     items(medications) { med ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            elevation = CardDefaults.cardElevation(4.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("Medication: ${med.medicationName}", fontWeight = FontWeight.Bold)
-                                Text("Dosage: ${med.dosage}")
-                                Text("Schedule: ${med.schedule}")
-                                Text("Start Date: ${med.startDate}")
-                                Text("Notes: ${med.notes ?: "No notes available"}")
-
-                                Row(
-                                    horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp)
-                                ) {
-                                    Button(
-                                        onClick = {
-                                            selectedMedication = med
-                                            showEditForm = true
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB3E5FC))
-                                    ) {
-                                        Text("Edit")
-                                    }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    Button(
-                                        onClick = {
-                                            medicationViewModel.deleteMedication(med.id)
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFCDD2))
-                                    ) {
-                                        Text("Delete")
-                                    }
-                                }
+                        MedicationCard(
+                            medication = med,
+                            onEditClick = {
+                                selectedMedication = med
+                                showEditForm = true
+                            },
+                            onDeleteClick = {
+                                medicationToDelete = med
+                                showDeleteDialog = true  // Show delete confirmation dialog
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -124,7 +99,7 @@ fun MedicationScreen(
                 medication = selectedMedication!!,
                 onDismiss = { showEditForm = false },
                 onSave = {
-                    medicationViewModel.editMedication(it)
+                    medicationViewModel.updateMedication(it)
                     showEditForm = false
                 }
             )
@@ -138,6 +113,65 @@ fun MedicationScreen(
                     showAddForm = false
                 }
             )
+        }
+
+        // Deletion Confirmation Dialog
+        if (showDeleteDialog && medicationToDelete != null) {
+            DeleteConfirmationDialog(
+                onDismiss = { showDeleteDialog = false },
+                onDelete = {
+                    medicationToDelete?.let {
+                        medicationViewModel.deleteMedication(it)
+                    }
+                    showDeleteDialog = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun MedicationCard(
+    medication: Medication,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Medication: ${medication.medicationName}", fontWeight = FontWeight.Bold)
+            Text("Dosage: ${medication.dosage}")
+            Text("Schedule: ${medication.schedule}")
+            Text("Start Date: ${medication.startDate}")
+            Text("Notes: ${medication.notes ?: "No notes available"}")
+
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Button(
+                    onClick = onEditClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB3E5FC))
+                ) {
+                    Text("Edit")
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = onDeleteClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFCDD2))
+                ) {
+                    Text("Delete")
+                }
+            }
         }
     }
 }
@@ -297,8 +331,32 @@ fun EditMedicationDialog(
     )
 }
 
+@Composable
+fun DeleteConfirmationDialog(
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Confirm Deletion") },
+        text = { Text("Are you sure you want to delete this medication? This action cannot be undone.") },
+        confirmButton = {
+            Button(onClick = onDelete) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        shape = RoundedCornerShape(20.dp)
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun MedicationScreenPreview() {
-    MedicationScreen(rememberNavController(), MedicationViewModel())
+    val mockViewModel = MedicationViewModel(LocalContext.current.applicationContext as Application)
+    MedicationScreen(rememberNavController(), medicationViewModel = mockViewModel)
 }

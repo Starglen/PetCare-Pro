@@ -145,7 +145,7 @@ fun NutritionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }, // ✅ Clickable Modifier
+            .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = AppCardColor()),
         elevation = CardDefaults.cardElevation(4.dp)

@@ -4,12 +4,17 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.data.UserDatabase
+import com.repository.UserRepository
 import com.starglen.petcarepro.ui.screens.ActivityScreen
+import com.starglen.petcarepro.ui.screens.auth.LoginScreen
+import com.starglen.petcarepro.ui.screens.auth.RegisterScreen
 import com.starglen.petcarepro.ui.screens.dietplan.DietPlanScreen
 import com.starglen.petcarepro.ui.screens.health.HealthScreen
 import com.starglen.petcarepro.ui.screens.healthhistory.MedicationScreen
@@ -22,7 +27,8 @@ import com.starglen.petcarepro.ui.screens.reminder.ReminderScreen
 import com.starglen.petcarepro.ui.screens.splash.SplashScreen
 import com.starglen.petcarepro.ui.screens.supplement.SupplementScreen
 import com.viewmodel.ActivityViewModel
-import com.viewmodel.HealthViewModel
+import com.viewmodel.AuthViewModel
+import com.viewmodel.VisitViewModel
 import com.viewmodel.MedicationViewModel
 import com.viewmodel.VaccinationViewModel
 
@@ -32,9 +38,10 @@ import com.viewmodel.VaccinationViewModel
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = ROUT_HOME // typically start with splash
+    startDestination: String = ROUT_SPLASH // typically start with splash
 ) {
-    val healthViewModel: HealthViewModel = viewModel()
+    val context = LocalContext.current
+    val healthViewModel: VisitViewModel = viewModel()
     val vaccinationViewModel: VaccinationViewModel = viewModel()
     val medicationViewModel: MedicationViewModel = viewModel()
     val activityViewModel: ActivityViewModel = viewModel()
@@ -100,6 +107,25 @@ fun AppNavHost(
         }
         composable(ROUT_MAP) {
             MapScreen(navController)
+        }
+// Initialize Room Database and Repository for Authentication
+        val appDatabase = UserDatabase.getDatabase(context)
+        val authRepository = UserRepository(appDatabase.userDao())
+        val authViewModel: AuthViewModel = AuthViewModel(authRepository)
+        composable(ROUT_REGISTER) {
+            RegisterScreen(authViewModel, navController) {
+                navController.navigate(ROUT_LOGIN) {
+                    popUpTo(ROUT_REGISTER) { inclusive = true }
+                }
+            }
+        }
+
+        composable(ROUT_LOGIN) {
+            LoginScreen(authViewModel, navController) {
+                navController.navigate(ROUT_HOME) {
+                    popUpTo(ROUT_LOGIN) { inclusive = true }
+                }
+            }
         }
     }
 }

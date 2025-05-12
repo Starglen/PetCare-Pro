@@ -1,34 +1,39 @@
 package com.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import com.repository.VaccineRepository
 import com.model.Vaccine
-import com.model.VetVisit
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class VaccinationViewModel : ViewModel() {
+class VaccinationViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Private MutableStateFlow to manage vaccinations
-    private val _vaccinations = MutableStateFlow<List<Vaccine>>(emptyList())
-    val vaccinations: StateFlow<List<Vaccine>> = _vaccinations
+    private val repository: VaccineRepository = VaccineRepository(application.applicationContext)
 
-    // Add a new vaccination
+    // Convert Flow to LiveData using asLiveData
+    val allVaccines: LiveData<List<Vaccine>> = repository.getAllVaccines().asLiveData()
+
+    // Function to add a new vaccine
     fun addVaccination(vaccine: Vaccine) {
-        // Add vaccine to the list
-        _vaccinations.value = _vaccinations.value + vaccine
-    }
-
-    // Edit an existing vaccination
-    fun editVaccination(updatedVaccination: Vaccine) {
-        _vaccinations.value = _vaccinations.value.map {
-            if (it.id == updatedVaccination.id) updatedVaccination else it
+        viewModelScope.launch {
+            repository.insertVaccine(vaccine)
         }
     }
 
-    // Delete a vaccination
-    fun deleteVaccination(id: Int) {
-        // Remove vaccine by matching the ID
-        _vaccinations.value = _vaccinations.value.filter { it.id != id }
+    // Function to update an existing vaccination
+    fun updateVaccination(vaccine: Vaccine) {
+        viewModelScope.launch {
+            repository.updateVaccine(vaccine)
+        }
     }
 
+    // Function to delete a vaccination
+    fun deleteVaccination(vaccine: Vaccine) {
+        viewModelScope.launch {
+            repository.deleteVaccine(vaccine)
+        }
+    }
 }

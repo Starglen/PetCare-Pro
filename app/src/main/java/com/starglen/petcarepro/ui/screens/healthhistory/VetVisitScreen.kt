@@ -1,5 +1,6 @@
 package com.starglen.petcarepro.ui.screens.healthhistory
 
+import android.app.Application
 import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,16 +26,16 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.model.VetVisit
 import com.starglen.petcarepro.ui.theme.maincolor
-import com.viewmodel.HealthViewModel
+import com.viewmodel.VisitViewModel
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VetVisitScreen(
     navController: NavController,
-    viewModel: HealthViewModel
+    viewModel: VisitViewModel
 ) {
-    val visits = viewModel.vetVisits.collectAsState().value
+    val visits by viewModel.allVetVisits.observeAsState(emptyList())
     var showEditForm by remember { mutableStateOf(false) }
     var selectedVisit by remember { mutableStateOf<VetVisit?>(null) }
     var showAddForm by remember { mutableStateOf(false) }
@@ -58,6 +60,7 @@ fun VetVisitScreen(
             }
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -106,7 +109,7 @@ fun VetVisitScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
 
                                     Button(
-                                        onClick = { viewModel.deleteVisit(visit.id) },
+                                        onClick = { viewModel.deleteVetVisit(visit) },
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFCDD2))
                                     ) {
                                         Text("Delete")
@@ -124,7 +127,7 @@ fun VetVisitScreen(
                 visit = selectedVisit!!,
                 onDismiss = { showEditForm = false },
                 onSave = {
-                    viewModel.editVisit(it)
+                    viewModel.updateVetVisit(it)
                     showEditForm = false
                 }
             )
@@ -134,7 +137,7 @@ fun VetVisitScreen(
             AddVetVisitDialog(
                 onDismiss = { showAddForm = false },
                 onSave = {
-                    viewModel.addVisit(it)
+                    viewModel.addVetVisit(it)
                     showAddForm = false
                 }
             )
@@ -243,10 +246,11 @@ fun EditVetVisitDialog(
     onSave: (VetVisit) -> Unit
 ) {
     val context = LocalContext.current
+    // Initialize vetNote as a non-nullable String, defaulting to an empty string if it's null
     var vetTitle by remember { mutableStateOf(visit.title) }
     var vetName by remember { mutableStateOf(visit.vetName) }
     var vetDate by remember { mutableStateOf(visit.date) }
-    var vetNote by remember { mutableStateOf(visit.note) }
+    var vetNote by remember { mutableStateOf(visit.note ?: "") } // Handle nullability here
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -299,8 +303,9 @@ fun EditVetVisitDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Ensure vetNote is treated as a non-nullable String
                 OutlinedTextField(
-                    value = vetNote,
+                    value = vetNote, // Now vetNote is guaranteed to be a non-null String
                     onValueChange = { vetNote = it },
                     label = { Text("Visit Notes") },
                     modifier = Modifier.fillMaxWidth()
@@ -313,7 +318,7 @@ fun EditVetVisitDialog(
                     title = vetTitle,
                     vetName = vetName,
                     date = vetDate,
-                    note = vetNote
+                    note = vetNote // vetNote is now non-nullable
                 )
                 onSave(updatedVisit)
             }) {
@@ -332,5 +337,12 @@ fun EditVetVisitDialog(
 @Preview(showBackground = true)
 @Composable
 fun VetVisitScreenPreview() {
-    VetVisitScreen(rememberNavController(), HealthViewModel())
+    // You can use a mock ViewModel for previews
+    val mockViewModel = VisitViewModel(LocalContext.current.applicationContext as Application)
+
+    VetVisitScreen(
+        navController = rememberNavController(),
+        viewModel = mockViewModel
+    )
 }
+
