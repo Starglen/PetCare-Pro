@@ -1,58 +1,40 @@
-# PetCare Pro — UI direction and screen inventory
+# PetCare Pro — Orange Edition
 
-The visual system is designed to feel reassuring, personal, and lively without using alarm-heavy colors or overstimulating decoration. The palette uses a deep botanical green for primary actions, a warm near-white canvas for long sessions, soft mint surfaces, and restrained marigold/coral accents. Text and status colors remain distinct so important care information is easy to scan.
+A cheerful, premium direction for PetCare Pro inspired by the supplied reference: saturated citrus orange, warm cream, friendly paw-print details, bright pet photography, and simple card-based navigation. The orange is reserved for brand moments, active controls, and key actions; warm neutrals keep long sessions comfortable and readable.
 
-## Design tokens
+## Color system
 
-| Role | Color | Usage |
-|---|---|---|
-| Forest | `#145C50` | Primary actions, selected navigation, key headings |
-| Mint | `#E5F1EB` | Soft cards, icon backplates, secondary surfaces |
-| Canvas | `#F7F8F4` | Main light-mode background |
-| Paper | `#FFFFFF` | Cards and form surfaces |
-| Ink | `#1E2B27` | Primary text |
-| Muted ink | `#5F6F69` | Supporting labels |
-| Marigold | `#FFD18A` | Small positive highlights and featured details |
-| Terracotta | `#9E493A` | Secondary emphasis; avoid using for large backgrounds |
-| Danger | `#B3261E` | Destructive/error states only |
+- **Brand orange `#C65300`** — primary buttons and selected controls, chosen for readable white-on-orange contrast.
+- **Bright orange `#FF8A00`** — illustration accents and decorative highlights, not long body text.
+- **Soft orange `#FFE6CC`** and **cream `#FFF8F0`** — card accents and page backgrounds.
+- **Cocoa `#2D2018`** — primary text; **muted cocoa `#75665D`** — secondary text.
+- **Leaf green `#32705A`** — positive health state; **coral `#B63F36`** — limited secondary emphasis.
+- **Dark mode** — espresso surfaces with warm orange actions and readable warm-white text.
 
-Dark mode uses a deep green-charcoal surface, pale mint primary actions, and warm readable text. Color is never the only way to communicate status; pair it with words or icons.
+Keep text contrast strong and never use color alone to convey urgency or health status.
 
-## Shared interaction rules
+## Screen direction
 
-- Use a consistent 8/12/18/24/30 dp corner scale and comfortable 16–24 dp content spacing.
-- Keep primary actions visible and labels explicit; icon-only controls need accessible descriptions.
-- Forms open as modal bottom sheets for quick creation/edit actions, with a clear title, scrollable fields, keyboard-safe layout, validation, cancel/dismiss behavior, and a full-width primary save action.
-- Use confirmation for destructive operations and show empty, loading, error, and permission-denied states.
-- Respect system font scaling, screen insets, TalkBack semantics, and reduced-motion expectations.
+1. **Splash:** full-bleed brand orange, subtle paw pattern, centered paw mark and wordmark, short, skippable-feeling transition.
+2. **Login:** cream page, orange illustration/brand block, concise welcome copy, rounded fields, high-contrast orange sign-in action.
+3. **Registration:** same family as Login with a calmer cream form panel, clear field labels, inline validation and one main action.
+4. **Home:** warm greeting, pet photo/profile card, orange next-care card, compact service shortcuts and a fixed bottom navigation bar.
+5. **Health:** clean dashboard with due/complete chips, three record cards and clear add actions.
+6. **Vet visits:** chronological appointment cards with clinic and date, plus add/edit sheets.
+7. **Vaccinations:** clear upcoming/completed groups and date badges, plus record form sheets.
+8. **Medication:** medication schedule cards with dosage hierarchy and edit/add sheets; confirm before deletion.
+9. **Reminders:** grouped today/upcoming cards, repeat schedule labels and bottom-sheet creation.
+10. **Activity:** category chips for activity/grooming/behavior, timeline list and sheet-based entry forms.
+11. **Nutrition:** image-led editorial cards, concise practical information, links to diet and supplements.
+12. **Diet plan:** meal plan cards and feeding schedule; any portion calculator is explicitly informational and not veterinary advice.
+13. **Supplements:** calm reference cards with safety notes and no unsupported treatment claims.
+14. **Vet locator:** map with a draggable result sheet, clinic list, directions/call actions and explicit permission states.
 
-## Screen inventory and target composition
+## Interaction and craft
 
-| Screen | Visual composition and key interaction |
-|---|---|
-| Splash | Calm brand mark on a warm canvas, short transition, no prolonged gate before sign-in. |
-| Login | Clear welcome heading, email/password fields, inline validation, password visibility, strong forest sign-in action, and a separate create-account link. |
-| Registration | Scrollable, well-spaced labeled fields, password guidance, inline errors, and one primary create-account action. |
-| Home | Pet selector and profile card; next care item; quick access to health, activity, nutrition, and nearby vet; bottom navigation for the primary areas. Add/log actions use bottom sheets. |
-| Health overview | Compact status summary and separate vaccine, medication, and visit cards; each action routes to its history or opens a focused bottom sheet. |
-| Vet visit history | Date-led timeline cards with clinic, visit reason, notes, edit action, and a bottom-sheet add/edit form. |
-| Vaccination history | Due/completed sections, due-date badges with text labels, vaccine details, and bottom-sheet record form. |
-| Medication history | Medication name, schedule and start date in scannable cards; add/edit in a scrollable bottom sheet; confirm deletion. |
-| Reminders | Today/upcoming grouping, schedule and recurrence shown clearly, completion state, and bottom-sheet create/edit form. |
-| Activity, grooming, behavior | Segmented category selector, readable timeline cards, empty states, and bottom-sheet forms for each entry type. |
-| Nutrition | Pet-specific overview, concise informational guidance, links to diet and supplements; avoid medical claims. |
-| Diet plan | Clear meal schedule and user-entered plan details; portion information is labeled as informational and prompts veterinary review. |
-| Supplements | Neutral catalog-style cards and user records; avoid implying a supplement is a veterinary recommendation. |
-| Vet locator | Map with a companion clinic list, accessible call/directions actions, and explicit location loading/permission/error states. |
+- Use bottom sheets for quick add/edit tasks, with keyboard-safe scrolling, title, labels, validation, cancel and a full-width primary action.
+- Keep content areas cream/white; reserve orange for expressive highlights so the whole app remains comfortable, not visually exhausting.
+- Use the supplied visual as inspiration, not as a pixel-perfect reproduction: use real pet assets only when rights and quality are known.
+- Test all routes, dark mode, large text, screen insets, TalkBack, empty/loading/error states, and navigation before release.
 
-## Bottom-sheet pattern
-
-Use `ModalBottomSheet` for short, contextual tasks (add reminder, log activity, add health record, edit a care item). Sheets should not replace full-screen navigation for complex workflows such as account creation or detailed record browsing. Keep sheet state local to the screen or hoist it into a state holder when multiple destinations need it.
-
-## Review checklist
-
-- Verify all routes in both light and dark themes.
-- Check contrast and large text/font scaling, TalkBack labels, keyboard overlap, and small-device scroll behavior.
-- Confirm form save/cancel and back-dismiss behavior.
-- Verify records persist and are associated with the selected pet before describing the product as production-ready.
-- Capture emulator screenshots for each route at phone and large-text sizes before release.
+The global Compose theme and the Home screen use this orange system. The screen list above is the target design for the remaining routes; it is not a claim that every route has already been implemented or visually tested.

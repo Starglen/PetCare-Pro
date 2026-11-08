@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -14,57 +15,59 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = Forest,
-    onPrimary = Paper,
-    primaryContainer = Mint,
-    onPrimaryContainer = Forest,
-    secondary = Terracotta,
-    onSecondary = Paper,
-    secondaryContainer = Color(0xFFF8E8E1),
-    onSecondaryContainer = Color(0xFF542117),
-    tertiary = Color(0xFF805600),
-    onTertiary = Paper,
-    tertiaryContainer = Marigold,
-    onTertiaryContainer = Color(0xFF352000),
-    background = Canvas,
-    onBackground = Ink,
-    surface = Paper,
-    onSurface = Ink,
-    surfaceVariant = Mint,
-    onSurfaceVariant = MutedInk,
-    outline = Border,
-    error = Danger,
-    onError = Paper
+    primary = PetOrange,
+    onPrimary = PetPaper,
+    primaryContainer = PetOrangeSoft,
+    onPrimaryContainer = PetInk,
+    secondary = PetGreen,
+    onSecondary = PetPaper,
+    secondaryContainer = PetGreenSoft,
+    onSecondaryContainer = Color(0xFF153D2C),
+    tertiary = PetCoral,
+    onTertiary = PetPaper,
+    tertiaryContainer = Color(0xFFFFE8E2),
+    onTertiaryContainer = Color(0xFF5C2019),
+    background = PetCream,
+    onBackground = PetInk,
+    surface = PetPaper,
+    onSurface = PetInk,
+    surfaceVariant = PetOrangePale,
+    onSurfaceVariant = PetMuted,
+    outline = PetBorder,
+    error = PetError,
+    onError = PetPaper
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF9DD4C4),
-    onPrimary = Color(0xFF00382F),
-    primaryContainer = Color(0xFF145C50),
-    onPrimaryContainer = Color(0xFFC0EBDD),
-    secondary = Color(0xFFFFB59E),
-    onSecondary = Color(0xFF5D190D),
-    secondaryContainer = Color(0xFF7B3022),
-    onSecondaryContainer = Color(0xFFFFDBD1),
-    tertiary = Marigold,
-    onTertiary = Color(0xFF422C00),
-    background = Color(0xFF111A17),
-    onBackground = Color(0xFFE0E9E3),
-    surface = Color(0xFF17211D),
-    onSurface = Color(0xFFE0E9E3),
-    surfaceVariant = Color(0xFF293630),
-    onSurfaceVariant = Color(0xFFC0CBC4),
-    outline = Color(0xFF89968E),
+    primary = Color(0xFFFFB77A),
+    onPrimary = Color(0xFF4A2000),
+    primaryContainer = Color(0xFF713300),
+    onPrimaryContainer = Color(0xFFFFDCC2),
+    secondary = Color(0xFFA8D4B7),
+    onSecondary = Color(0xFF143D2A),
+    secondaryContainer = Color(0xFF2E5740),
+    onSecondaryContainer = Color(0xFFC4EBD1),
+    tertiary = Color(0xFFFFB4A5),
+    onTertiary = Color(0xFF671E13),
+    tertiaryContainer = Color(0xFF8A3427),
+    onTertiaryContainer = Color(0xFFFFDAD2),
+    background = Color(0xFF1E1712),
+    onBackground = Color(0xFFF2E5DA),
+    surface = Color(0xFF282019),
+    onSurface = Color(0xFFF2E5DA),
+    surfaceVariant = Color(0xFF3B2E24),
+    onSurfaceVariant = Color(0xFFD7C5B7),
+    outline = Color(0xFF9C8879),
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005)
 )
 
-private val PetCareShapes = androidx.compose.material3.Shapes(
+private val PetCareShapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(30.dp)
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(32.dp)
 )
 
 @Composable
@@ -73,15 +76,15 @@ fun PetCareProTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // Dynamic color stays disabled so PetCare has a consistent, recognizable palette.
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    // Dynamic color intentionally stays off so PetCare has one coherent identity.
+    val colors = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.background.toArgb()
+            window.statusBarColor = colors.background.toArgb()
+            window.navigationBarColor = colors.background.toArgb()
             WindowCompat.setDecorFitsSystemWindows(window, false)
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = !darkTheme
@@ -91,7 +94,7 @@ fun PetCareProTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colors,
         typography = Typography,
         shapes = PetCareShapes,
         content = content
